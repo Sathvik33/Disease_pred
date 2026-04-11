@@ -1,0 +1,10 @@
+*.env
+*.pyc
+*.pth
+*.pt
+Data/
+Models/
+*.csv
+*.jpg
+*.png
+JPG
