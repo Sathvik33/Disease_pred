@@ -8,3 +8,6 @@ Models/
 *.jpg
 *.png
 JPG
+wandb/
+*.log
+*.wandb

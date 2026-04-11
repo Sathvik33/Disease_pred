@@ -184,11 +184,18 @@ if __name__ == "__main__":
         if epoch == 5:
             for param in model.features[-3:].parameters():
                 param.requires_grad = True
-            optimizer.add_param_group({
-                "params": model.features[-3:].parameters(),
-                "lr"    : 1e-4
-            })
-            print("Unfreezing last 3 feature blocks for fine-tuning")
+            
+            existing_param_ids = {id(p) for group in optimizer.param_groups for p in group["params"]}
+            new_params = [p for p in model.features[-3:].parameters() if id(p) not in existing_param_ids]
+            
+            if new_params:
+                optimizer.add_param_group({
+                    "params": new_params,
+                    "lr"    : 1e-4
+                })
+                print("Unfreezing last 3 feature blocks for fine-tuning")
+            else:
+                print("Fine-tune params already in optimizer — skipping")
 
         avg_train_loss = train_epoch(
             epoch, model, train_loader, optimizer, criterion, scaler, device
@@ -223,8 +230,8 @@ if __name__ == "__main__":
         }, checkpoint_path)
         print(f"Checkpoint saved (Epoch {epoch+1})")
 
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
+        if avg_val_loss < best_val_loss:
+            best_val_loss = avg_val_loss
             torch.save({
                 "epoch"            : epoch,
                 "model_state_dict" : model.state_dict(),
