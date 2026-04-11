@@ -2,8 +2,8 @@
 *.pyc
 *.pth
 *.pt
-Data/
-Models/
+DL/Data/
+DL/Models/
 *.csv
 *.jpg
 *.png
@@ -11,3 +11,6 @@ JPG
 wandb/
 *.log
 *.wandb
+node_modules/
+postman/
+.postman
