@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 export const createUser = async (name: string, email: string, password: string) => {
     const hash = await bcrypt.hash(password, 10);
     const res = await pool.query(
-        `INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email, created_at`,
+        `INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, uid, name, email, created_at`,
         [name, email, hash]
     );
     return res.rows[0];
@@ -18,12 +18,12 @@ export const loginUser = async (email: string, password: string) => {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return null;
 
-    return { id: user.id, name: user.name, email: user.email };
+    return { id: user.id, uid: user.uid, name: user.name, email: user.email };
 };
 
 export const getUserById = async (id: number) => {
     const res = await pool.query(
-        `SELECT id, name, email, created_at FROM users WHERE id = $1`,
+        `SELECT id, uid, name, email, created_at FROM users WHERE id = $1`,
         [id]
     );
     return res.rows[0] || null;

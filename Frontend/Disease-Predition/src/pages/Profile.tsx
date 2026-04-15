@@ -3,6 +3,7 @@ import { getMe } from '../api';
 
 interface User {
     id: number;
+    uid: string;
     name: string;
     email: string;
     created_at: string;
@@ -56,6 +57,11 @@ export default function Profile() {
                 </div>
 
                 <div className="profile-field">
+                    <label>User ID</label>
+                    <p className="value" style={{ fontFamily: 'monospace', fontSize: '0.85rem', letterSpacing: '0.3px' }}>{user.uid}</p>
+                </div>
+
+                <div className="profile-field">
                     <label>Name</label>
                     <p className="value">{user.name}</p>
                 </div>
@@ -63,11 +69,6 @@ export default function Profile() {
                 <div className="profile-field">
                     <label>Email</label>
                     <p className="value">{user.email}</p>
-                </div>
-
-                <div className="profile-field">
-                    <label>User ID</label>
-                    <p className="value">#{user.id}</p>
                 </div>
             </div>
 

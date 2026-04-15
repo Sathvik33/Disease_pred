@@ -86,7 +86,11 @@ export default function Dashboard() {
 
         try {
             const res = await diagnose(file, parseFloat(lat), parseFloat(lon));
-            setResult(res.data);
+            if (res.data.error && res.data.prediction && res.data.prediction.is_plant === false) {
+                setError(res.data.error);
+            } else {
+                setResult(res.data);
+            }
         } catch (err: any) {
             setError(err.response?.data?.error || 'diagnosis failed');
         } finally {

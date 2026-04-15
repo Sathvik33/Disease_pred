@@ -11,6 +11,19 @@ export const getDiagnosis = async (
 ) => {
     const prediction = await predictDisease(file);
 
+    if (!prediction.is_plant) {
+        return {
+            prediction: {
+                disease: prediction.disease,
+                confidence: prediction.confidence,
+                is_plant: false,
+                top3: prediction.top3,
+            },
+            advisory: null,
+            error: "this image does not appear to be a crop or plant leaf. please upload a clear photo of a plant leaf for diagnosis.",
+        };
+    }
+
     const advisory = await runAgent(
         prediction.disease,
         prediction.confidence,
@@ -24,5 +37,13 @@ export const getDiagnosis = async (
         [userId || null, prediction.disease, prediction.confidence, lat, lon, advisory, ip]
     );
 
-    return { prediction, advisory };
+    return {
+        prediction: {
+            disease: prediction.disease,
+            confidence: prediction.confidence,
+            is_plant: true,
+            top3: prediction.top3,
+        },
+        advisory,
+    };
 };

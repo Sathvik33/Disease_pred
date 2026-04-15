@@ -9,6 +9,9 @@ const FASTAPI_URL = process.env.Fast_api ?? "http://localhost:8000";
 export interface PredictResult {
     disease: string;
     confidence: number;
+    is_plant: boolean;
+    entropy: number;
+    top3: { disease: string; confidence: number }[];
 }
 
 export const predictDisease = async (file: Express.Multer.File): Promise<PredictResult> => {
