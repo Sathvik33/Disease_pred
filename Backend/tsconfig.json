@@ -5,7 +5,8 @@
     "outDir": "./dist",
 
     /* Environment */
-    "module": "commonjs",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "target": "es2020",
     "lib": ["es2020"],
     "types": ["node"],

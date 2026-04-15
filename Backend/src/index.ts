@@ -2,26 +2,37 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import multer from "multer";
 import predictRoute from "./routes/predict";
+import diagnoseRoute from "./routes/diagnose";
+import initDB from "./schema";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.set("trust proxy", 1);
 
-app.get("/health", (_req, res) => res.json({status: "Ok"}));
+app.get("/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api", predictRoute);
+app.use("/api", diagnoseRoute);
 
-app.get("/", (req, res) => {
-    res.send("Hi There!");
+app.get("/", (_req, res) => {
+    res.send("Disease Prediction API");
 });
 
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  if (err instanceof multer.MulterError) {
-    res.status(400).json({ error: err.message });
-    return;
-  }
-  res.status(500).json({ error: err.message });
+    if (err instanceof multer.MulterError) {
+        res.status(400).json({ error: err.message });
+        return;
+    }
+    res.status(500).json({ error: err.message });
 });
 
-app.listen(5000, () => {
-    console.log("Server is running");
-});
+initDB()
+    .then(() => {
+        app.listen(5000, () => {
+            console.log("server running on :5000");
+        });
+    })
+    .catch((err) => {
+        console.error("db init failed:", err);
+        process.exit(1);
+    });
