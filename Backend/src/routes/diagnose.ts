@@ -1,13 +1,14 @@
 import express from "express";
 import multer from "multer";
 import { getDiagnosis } from "../services/agent.service";
-import { Request, Response } from "express";
+import { Response } from "express";
 import { diagnoseLimiter } from "../middleware/limiter";
+import auth, { AuthRequest } from "../middleware/auth";
 
 const diagnoseRoute = express.Router();
 const upload = multer();
 
-diagnoseRoute.post("/diagnose", diagnoseLimiter, upload.single("image"), async (req: Request, res: Response): Promise<void> => {
+diagnoseRoute.post("/diagnose", auth, diagnoseLimiter, upload.single("image"), async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const file = req.file;
         if (!file) {
@@ -24,8 +25,7 @@ diagnoseRoute.post("/diagnose", diagnoseLimiter, upload.single("image"), async (
         }
 
         const ip = req.ip || "unknown";
-        const userId = req.body.user_id ? parseInt(req.body.user_id) : undefined;
-        const result = await getDiagnosis(file, lat, lon, ip, userId);
+        const result = await getDiagnosis(file, lat, lon, ip, req.userId);
         res.json(result);
     } catch (err: any) {
         console.error(err);
