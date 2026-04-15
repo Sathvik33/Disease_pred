@@ -3,6 +3,7 @@ import cors from "cors";
 import multer from "multer";
 import predictRoute from "./routes/predict";
 import diagnoseRoute from "./routes/diagnose";
+import userRoute from "./routes/user";
 import initDB from "./schema";
 
 const app = express();
@@ -13,6 +14,7 @@ app.set("trust proxy", 1);
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api", predictRoute);
 app.use("/api", diagnoseRoute);
+app.use("/api", userRoute);
 
 app.get("/", (_req, res) => {
     res.send("Disease Prediction API");

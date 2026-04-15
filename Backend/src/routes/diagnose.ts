@@ -24,7 +24,8 @@ diagnoseRoute.post("/diagnose", diagnoseLimiter, upload.single("image"), async (
         }
 
         const ip = req.ip || "unknown";
-        const result = await getDiagnosis(file, lat, lon, ip);
+        const userId = req.body.user_id ? parseInt(req.body.user_id) : undefined;
+        const result = await getDiagnosis(file, lat, lon, ip, userId);
         res.json(result);
     } catch (err: any) {
         console.error(err);

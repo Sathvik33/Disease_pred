@@ -1,7 +1,13 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import axios from "axios";
+import { tavily } from "@tavily/core";
+import { search as ddgSearch } from "duck-duck-scrape";
 import { lookupTreatment, lookupDisease } from "../services/treatment.service";
+import dotenv from "dotenv";
+dotenv.config({ path: "../.env" });
+
+const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY || "" });
 
 const weatherTool = tool(
     async ({ latitude, longitude }) => {
@@ -54,30 +60,61 @@ const weatherTool = tool(
     }
 );
 
-const treatmentTool = tool(
-    async ({ disease }) => {
-        return lookupTreatment(disease);
+const treatmentSearch = tool(
+    async ({ query, disease }) => {
+        try {
+            const res = await tvly.search(query, {
+                searchDepth: "advanced",
+                maxResults: 5,
+                includeAnswer: true,
+            });
+
+            const parts: string[] = [];
+            if (res.answer) parts.push(`Summary: ${res.answer}`);
+            for (const r of res.results) {
+                parts.push(`[${r.title}] ${r.content}`);
+            }
+
+            if (parts.length > 0) return parts.join("\n\n");
+        } catch (_) {}
+
+        if (disease) return lookupTreatment(disease);
+
+        return "search failed and no fallback data available";
     },
     {
-        name: "get_treatment",
-        description: "Get treatment recommendations including chemical, organic, and cultural methods for a plant disease",
+        name: "search_treatment",
+        description: "Search the web for treatment recommendations, medicines, fungicides, and precautions for a plant disease. Falls back to local database if search fails.",
         schema: z.object({
-            disease: z.string().describe("disease class name like Tomato___Late_blight"),
+            query: z.string().describe("search query like 'Apple Cedar Apple Rust treatment fungicide recommendations'"),
+            disease: z.string().optional().describe("disease class name like Apple___Cedar_apple_rust for fallback lookup"),
         }),
     }
 );
 
-const diseaseTool = tool(
-    async ({ disease }) => {
-        return lookupDisease(disease);
+const diseaseSearch = tool(
+    async ({ query, disease }) => {
+        try {
+            const res = await ddgSearch(query, { safeSearch: 0 });
+
+            if (res.results && res.results.length > 0) {
+                const top = res.results.slice(0, 5);
+                return top.map(r => `[${r.title}] ${r.description}`).join("\n\n");
+            }
+        } catch (_) {}
+
+        if (disease) return lookupDisease(disease);
+
+        return "search failed and no fallback data available";
     },
     {
-        name: "get_disease_info",
-        description: "Get detailed information about a plant disease including causes, symptoms, severity, and favorable conditions",
+        name: "search_disease_info",
+        description: "Search the web for information about a plant disease including causes, symptoms, and spread patterns. Falls back to local database if search fails.",
         schema: z.object({
-            disease: z.string().describe("disease class name like Tomato___Late_blight"),
+            query: z.string().describe("search query like 'Apple Cedar Apple Rust disease causes symptoms'"),
+            disease: z.string().optional().describe("disease class name like Apple___Cedar_apple_rust for fallback lookup"),
         }),
     }
 );
 
-export { weatherTool, treatmentTool, diseaseTool };
+export { weatherTool, treatmentSearch, diseaseSearch };

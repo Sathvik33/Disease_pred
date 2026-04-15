@@ -6,7 +6,8 @@ export const getDiagnosis = async (
     file: Express.Multer.File,
     lat: number,
     lon: number,
-    ip: string
+    ip: string,
+    userId?: number
 ) => {
     const prediction = await predictDisease(file);
 
@@ -18,9 +19,9 @@ export const getDiagnosis = async (
     );
 
     await pool.query(
-        `INSERT INTO predictions (disease, confidence, latitude, longitude, advisory, ip)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [prediction.disease, prediction.confidence, lat, lon, advisory, ip]
+        `INSERT INTO predictions (user_id, disease, confidence, latitude, longitude, advisory, ip)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [userId || null, prediction.disease, prediction.confidence, lat, lon, advisory, ip]
     );
 
     return { prediction, advisory };

@@ -1,6 +1,6 @@
 import { ChatOllama } from "@langchain/ollama";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { weatherTool, treatmentTool, diseaseTool } from "./tools";
+import { weatherTool, treatmentSearch, diseaseSearch } from "./tools";
 import dotenv from "dotenv";
 dotenv.config({ path: "../.env" });
 
@@ -10,7 +10,7 @@ const llm = new ChatOllama({
     temperature: 0,
 });
 
-const tools = [weatherTool, treatmentTool, diseaseTool];
+const tools = [weatherTool, treatmentSearch, diseaseSearch];
 
 const agent = createReactAgent({
     llm,
@@ -30,8 +30,8 @@ Confidence: ${(confidence * 100).toFixed(1)}%
 Location coordinates: ${lat}, ${lon}
 
 Your task:
-1. Use get_disease_info to understand this disease
-2. Use get_treatment to find treatment options
+1. Use search_disease_info to look up information about this disease (search for the disease name with plant name)
+2. Use search_treatment to find current treatment recommendations and medicines for this disease
 3. Use get_weather with the given coordinates to check current and recent weather conditions
 4. Analyze how the weather conditions relate to this disease
 5. Provide a clear, actionable advisory for the farmer including:
