@@ -44,11 +44,20 @@ const weatherTool = tool(
             `${t}: high ${hist.temperature_2m_max[i]}°C, low ${hist.temperature_2m_min[i]}°C, rain ${hist.precipitation_sum[i]}mm`
         ));
 
-        return [
-            `Current: ${cur.temperature_2m}°C, humidity ${cur.relative_humidity_2m}%, precipitation ${cur.precipitation}mm, wind ${cur.wind_speed_10m}km/h`,
-            `Past 7 days:`,
-            ...days
-        ].join("\n");
+        return {
+            current: {
+                temperature: cur.temperature_2m,
+                humidity: cur.relative_humidity_2m,
+                precipitation: cur.precipitation,
+                wind: cur.wind_speed_10m
+            },
+            history: hist.time.map((t: string, i: number) => ({
+                date: t,
+                temp_max: hist.temperature_2m_max[i],
+                temp_min: hist.temperature_2m_min[i],
+                rain: hist.precipitation_sum[i]
+            }))
+        };
     },
     {
         name: "get_weather",
@@ -76,7 +85,7 @@ const treatmentSearch = tool(
             }
 
             if (parts.length > 0) return parts.join("\n\n");
-        } catch (_) {}
+        } catch (_) { }
 
         if (disease) return lookupTreatment(disease);
 
@@ -101,7 +110,7 @@ const diseaseSearch = tool(
                 const top = res.results.slice(0, 5);
                 return top.map(r => `[${r.title}] ${r.description}`).join("\n\n");
             }
-        } catch (_) {}
+        } catch (_) { }
 
         if (disease) return lookupDisease(disease);
 

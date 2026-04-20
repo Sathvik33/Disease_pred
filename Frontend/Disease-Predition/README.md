@@ -1,73 +1,42 @@
-# React + TypeScript + Vite
+<div align="center">
+  <h1>🎨 Disease Prediction Interface</h1>
+  <p><strong>A Sleek, Interactive Agronomy Companion Application</strong></p>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+  [![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)](#)
+  [![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)](#)
+  [![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)](#)
+</div>
 
-Currently, two official plugins are available:
+## 📌 Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The frontend interface for the Disease Prediction ecosystem. Built with raw performance in mind via **Vite** and styled interactively with React and standard CSS. This SPA acts as the entrypoint for users wishing to upload leaf imagery, rendering AI-generated diagnostic streams gracefully.
 
-## React Compiler
+### ✨ Features
+- **Rapid HMR:** Scaffolded flawlessly with `Vite` for lightning-fast module reloading.
+- **Interactive Component Mapping:** Easily visualize AI responses, meteorological charts, and complex treatment taxonomies fetched from our ReAct agent.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Setup & Running Locally
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Install NPM Dependencies:
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Run the Vite Dev Server:
+```bash
+npm run dev
 ```
+*(The UI will default launch on `http://localhost:3000` assuming the `vite.config.ts` mapping).*
+
+## 🐳 Docker Production Build
+
+Rather than deploying the raw development server, our included Dockerfile compiles your React code using the `tsc -b && vite build` pattern via multi-stage construction before copying the minified `/dist` block over onto a rapid **Nginx Alpine** engine. 
+
+```bash
+docker build -t frontend:latest .
+docker run -p 80:80 frontend:latest
+```
+*Note: Make sure your proxy routes or CNAME aliases translate HTTP queries back to the Express Node app correctly in a production environment.*
+
+---
+*Built by [@Sathvik33](https://github.com/Sathvik33) as part of the Disease-Prediction Platform.*

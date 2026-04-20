@@ -1,13 +1,13 @@
-import { ChatOllama } from "@langchain/ollama";
+import { ChatGroq } from "@langchain/groq";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { weatherTool, treatmentSearch, diseaseSearch } from "./tools";
 import dotenv from "dotenv";
 dotenv.config({ path: "../.env" });
 
-const llm = new ChatOllama({
-    model: process.env.OLLAMA_MODEL || "qwen2.5:7b",
-    baseUrl: process.env.OLLAMA_URL || "http://127.0.0.1:11434",
-    temperature: 0,
+const llm = new ChatGroq({
+  apiKey: process.env.GROQ_API_KEY!,
+  model: "llama-3.3-70b-versatile",
+  temperature: 0,
 });
 
 const tools = [weatherTool, treatmentSearch, diseaseSearch];
@@ -23,26 +23,72 @@ export const runAgent = async (
     lat: number,
     lon: number
 ): Promise<string> => {
-    const prompt = `You are an expert agricultural advisor. A plant disease detection model has identified the following:
+    const prompt = `You are an expert agricultural advisor assisting a farmer in real-world conditions.
 
-Disease: ${disease}
-Confidence: ${(confidence * 100).toFixed(1)}%
-Location coordinates: ${lat}, ${lon}
+A plant disease detection system has produced the following:
 
-Your task:
-1. Use search_disease_info to look up information about this disease (search for the disease name with plant name)
-2. Use search_treatment to find current treatment recommendations and medicines for this disease
-3. Use get_weather with the given coordinates to check current and recent weather conditions
-4. Analyze how the weather conditions relate to this disease
-5. Provide a clear, actionable advisory for the farmer including:
-   - What the disease is and how serious it is
-   - How current weather may affect disease progression
-   - Specific treatment recommendations (both chemical and organic options)
-   - Immediate precautions to take
-   - Preventive measures for the future
+- Disease: ${disease}
+- Confidence: ${(confidence * 100).toFixed(1)}%
+- Location: Latitude ${lat}, Longitude ${lon}
 
-Be concise and practical. The farmer needs actionable advice, not a textbook.`;
+You MUST follow these rules strictly:
 
+1. ALWAYS use the provided tools:
+   - search_disease_info → for disease details
+   - search_treatment → for treatments and medicines
+   - get_weather → for current + recent weather
+
+2. DO NOT assume anything:
+   - Base your reasoning ONLY on tool outputs
+   - If weather does NOT strongly support disease spread, say that clearly
+
+3. Use confidence score:
+   - If confidence > 80% → give direct treatment advice
+   - If 50–80% → suggest confirmation + treatment
+   - If < 50% → warn about possible misclassification
+
+4. Be practical, not academic:
+   - Avoid textbook explanations
+   - Speak like a field advisor helping a farmer
+
+5. PRIORITIZE actions:
+   - Farmers need to know what to do FIRST
+
+---
+
+FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
+
+🚨 **Immediate Actions (Do this first)**
+1. ...
+2. ...
+3. ...
+
+🌿 **Disease Summary**
+- What it is (1–2 lines max)
+- Severity (Low / Moderate / High)
+
+🌦 **Weather Impact Analysis**
+- What the current weather actually indicates
+- Whether it helps or slows disease spread
+
+💊 **Treatment Plan**
+- Chemical options
+- Organic options
+
+🛡 **Prevention (Next 7–14 days)**
+- Practical steps to avoid spread
+
+⚠️ **Confidence Note**
+- Explain reliability of prediction based on confidence score
+
+---
+
+Keep response:
+- Clear
+- Short
+- Actionable
+- No unnecessary theory
+`;
     const result = await agent.invoke({
         messages: [{ role: "user", content: prompt }],
     });
