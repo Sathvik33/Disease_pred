@@ -20,8 +20,6 @@ services:
     networks:
       - internal
 
-  # ── DL / ONNX inference service ─────────────────────────────────────────────
-  # Stays internal — only the backend calls it, never the public internet.
   dl-service:
     build:
       context: ./DL-service
@@ -39,9 +37,6 @@ services:
     networks:
       - internal
 
-  # ── Node.js API + LLM Agent ─────────────────────────────────────────────────
-  # Port 5000 is exposed publicly so Vercel (frontend) can reach the API.
-  # FRONTEND_URL must match your Vercel deployment URL for CORS to pass.
   backend:
     build:
       context: ./Backend
@@ -56,10 +51,10 @@ services:
     env_file: .env.production
     environment:
       NODE_ENV:        production
-      DB_HOST:         postgres          # service-name, not localhost
+      DB_HOST:         postgres
       ML_SERVICE_URL:  http://dl-service:8000
     ports:
-      - "5000:5000"                      # public — called by Vercel frontend
+      - "5000:5000"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:5000/health"]
       interval: 30s
@@ -69,11 +64,9 @@ services:
     networks:
       - internal
 
-# ── Networks ──────────────────────────────────────────────────────────────────
 networks:
   internal:
     driver: bridge
 
-# ── Volumes ───────────────────────────────────────────────────────────────────
 volumes:
   pgdata:

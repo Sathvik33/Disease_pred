@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌿 PlantDoc — AI Plant Disease Diagnosis Platform
+# PlantDoc — AI Plant Disease Diagnosis Platform
 
 **Upload a leaf photo. Get an instant diagnosis, weather-aware treatment plan, and actionable farming advice — powered by computer vision and a multi-tool LLM agent.**
 
@@ -17,268 +17,88 @@
 
 ## What is PlantDoc?
 
-PlantDoc is a production-grade, full-stack AI system that lets farmers, agronomists, and gardeners diagnose plant diseases in seconds. It goes far beyond simple image classification:
+PlantDoc is a production-grade, full-stack AI system that lets farmers, agronomists, and gardeners diagnose plant diseases in seconds. It goes far beyond simple image classification by integrating an LLM agent that provides actionable treatment advice.
 
-1. A **fine-tuned MobileNet model** (exported to ONNX) classifies the leaf image into one of **38 disease categories** with confidence scoring and entropy-based validity checking.
-2. A **LangGraph ReAct agent** (LLaMA 3.3 70B via Groq) then fires three tools in parallel — fetching real-time weather data, live web treatment recommendations, and disease information.
-3. The agent synthesises all of this into a **structured, actionable advisory** tailored to the farmer's exact location and current weather conditions.
-
-Everything runs as isolated microservices, fully containerised for one-command deployment on EC2 or any container platfor## System Architecture
-
-```
-┌─────────────────────────────────────────┐
-│          User Browser                    │
-└────────────┬────────────────────────────┘
-             │ HTTPS
-┌────────────▼────────────────────────────┐
-│   Vercel — React SPA (Frontend)          │
-│   Static CDN, global edge network        │
-└────────────┬────────────────────────────┘
-             │ HTTPS :5000  (VITE_API_URL)
-             │ Cross-origin — CORS restricted
-┌────────────▼──────────────── EC2 ───────┐
-│   Backend — Express 5 + TypeScript       │
-│   JWT Auth · Rate limiting · Port 5000   │
-│   LangGraph ReAct Agent                  │
-│                                          │
-│  ┌─────────────┐   ┌──────────────────┐ │
-│  │  DL-service  │   │   PostgreSQL 15   │ │
-│  │  FastAPI     │   │   (internal only) │ │
-│  │  ONNX model  │   └──────────────────┘ │
-│  │  (internal)  │                        │
-│  └─────────────┘                         │
-└──────────────────────────────────────────┘
-             │ External API calls
-┌────────────▼────────────────────────────┐
-│  • Groq API  (LLaMA 3.3 70B)            │
-│  • Tavily    (web search)               │
-│  • DuckDuckGo (fallback search)         │
-│  • Open-Meteo (weather data)            │
-└─────────────────────────────────────────┘
-```
-
-### Services
-
-| Service | Hosting | Tech | Responsibility |
-|---|---|---|---|
-| **Frontend** | Vercel | React 19, Vite, TypeScript | SPA — image upload, camera, GPS, auth, results |
-| **Backend** | EC2, port 5000 | Node.js, Express 5, TypeScript, LangGraph | API gateway, JWT auth, AI agent, DB writes |
-| **DL-service** | EC2 (internal) | Python 3.11, FastAPI, ONNX Runtime | Image inference — returns disease + confidence |
-| **Database** | EC2 (internal) | PostgreSQL 15 | Users, prediction history, advisory logs |
-�─────────────┘    │  • Open-Meteo Weather │
-                                        └──────────────────────┘
-```
-
-### Services
-
-| Service | Tech | Responsibility |
-|---|---|---|
-| **Frontend** | React 19, Vite, TypeScript, Nginx | SPA — image upload, camera capture, GPS, auth, results |
-| **Backend** | Node.js, Express 5, TypeScript, LangGraph | API gateway, JWT auth, AI agent orchestration, DB writes |
-| **DL-service** | Python 3.11, FastAPI, ONNX Runtime | Image inference — runs the ONNX model, returns disease + confidence |
-| **Database** | PostgreSQL 15 | Users, prediction history, advisory logs |
+### Features
+- **Instant Diagnosis**: Fast ONNX model inference deployed via FastAPI.
+- **Agentic Advice**: Integrates Groq and Tavily for accurate, contextual, and up-to-date treatment plans.
+- **Secure Architecture**: Robust backend in Node.js/Express with Postgres for user management.
+- **Modern UI**: Sleek, responsive React frontend.
 
 ---
 
-## Key Features
+## 🏗 System Architecture
 
-- 📸 **Drag-and-drop or live camera** capture for leaf images
-- 📍 **GPS auto-location** with full error handling (permission denied, timeout, unavailable)
-- 🧠 **38-class ONNX plant disease model** — MobileNet fine-tuned on PlantVillage dataset
-- 🔬 **Entropy-based non-plant detection** — rejects non-leaf images before burning LLM tokens
-- 🤖 **LangGraph ReAct agent** with three live tools:
-  - `get_weather` — Open-Meteo current + 7-day history
-  - `search_treatment` — Tavily advanced search with local DB fallback
-  - `search_disease_info` — DuckDuckGo scrape with local DB fallback
-- 💊 **Confidence-aware advice** — direct treatment / suggest confirmation / warn about misclassification
-- 🌦️ **Weather-correlated recommendations** — advice changes based on actual field conditions
-- 🔐 **JWT authentication** — bcrypt hashed passwords, 7-day tokens, server-side validation on every route load
-- 📜 **Prediction history** — all diagnoses logged per user with full advisory text
-- ⚡ **Rate limiting** — 30 req/15 min on predict, 10 req/15 min on diagnose
-- 🐳 **Single-command Docker deployment** — all four services orchestrated by Docker Compose
+The application is split into three main components:
+
+1. **Frontend (Vercel)**
+   - Built with React, Vite, and TailwindCSS.
+   - Deployed seamlessly on Vercel for fast edge delivery.
+   - Live URL: [PlantDoc App](https://disease-pred-eight.vercel.app/)
+
+2. **Backend Node.js API (Docker)**
+   - Express server handling authentication, user sessions, and routing requests to the ML service.
+   - Connects to PostgreSQL database for persistent storage.
+
+3. **DL-Service / ML API (Docker)**
+   - FastAPI Python backend running ONNX models for high-performance plant disease classification.
+   - Strictly internal microservice (not exposed to the public internet).
 
 ---
 
-## Production Deployment
+## 🚀 Deployment & Containerization
 
-### Architecture
-
-| Component | Where | Notes |
-|---|---|---|
-| Frontend | **Vercel** | Auto-deployed from `Frontend/Disease-Predition/` on push |
-| Backend | **EC2** port 5000 | Public — Vercel calls it over HTTPS |
-| DL-service | **EC2** internal | Private — only the backend reaches it |
-| PostgreSQL | **EC2** internal | Private — only the backend reaches it |
+The backend services are fully containerized using multi-stage Docker builds. You can easily run the entire backend infrastructure locally or on a VPS (like Render, AWS EC2, or DigitalOcean) using Docker Compose.
 
 ### Prerequisites
+- Docker and Docker Compose
+- Node.js (for local dev)
+- Python 3.11 (for local dev)
 
-- EC2 instance (t3.medium or better)
-- Docker Engine 24+ and Docker Compose v2 on EC2
-- Vercel account + project connected to this repo
-- Groq API key — [console.groq.com](https://console.groq.com)
-- Tavily API key — [tavily.com](https://tavily.com)
+### Environment Variables
 
-### Step 1 — Set up Vercel
-
-1. Import `Frontend/Disease-Predition/` as a Vercel project (set **Root Directory** to `Frontend/Disease-Predition`)
-2. Add this **Environment Variable** in Vercel project settings:
-
-   | Variable | Value |
-   |---|---|
-   | `VITE_API_URL` | `http://your-ec2-public-ip:5000` |
-
-3. Deploy — note your Vercel URL (e.g. `https://plantdoc.vercel.app`)
-
-### Step 2 — Deploy backend + DL-service on EC2
-
-```bash
-# SSH into your EC2 instance
-git clone https://github.com/Sathvik33/Disease-Prediction.git
-cd Disease-Prediction
-
-# Create and fill in secrets
-cp .env.production .env.production.filled
-nano .env.production.filled
-```
-
-Fill in all values — especially `FRONTEND_URL` which must exactly match your Vercel URL:
+Before starting, ensure you have your `.env` (or `.env.production`) file properly configured at the root directory:
 
 ```env
-FRONTEND_URL=https://plantdoc.vercel.app    # ← your actual Vercel URL
-DB_PASS=strong_password_here
-JWT_SECRET=48_byte_hex_string
-GROQ_API_KEY=gsk_...
-TAVILY_API_KEY=tvly-...
-```
+FRONTEND_URL=https://disease-pred-eight.vercel.app/
 
-```bash
-# Build and start (backend + dl-service + postgres only)
-docker compose --env-file .env.production.filled build --no-cache
-docker compose --env-file .env.production.filled up -d
-```
-
-### Step 3 — Open EC2 security group
-
-In AWS Console → EC2 → Security Groups, add an **inbound rule**:
-
-| Type | Port | Source |
-|---|---|---|
-| Custom TCP | 5000 | 0.0.0.0/0 (or Vercel IP ranges) |
-
-### Step 4 — Verify
-
-```bash
-curl http://your-ec2-ip:5000/health
-# → {"status":"ok"}
-
-docker compose ps
-# all services should show "healthy"
-```
-
-Your Vercel frontend is now live and talking to the EC2 backend.
-
-
----
-
-## Local Development
-
-Start each service individually — no Docker needed.
-
-**Terminal 1 — DL-service:**
-```bash
-cd DL-service
-pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-**Terminal 2 — Backend:**
-```bash
-cd Backend
-npm install
-npm run dev      # ts-node-dev, hot reload, reads root .env
-```
-
-**Terminal 3 — Frontend:**
-```bash
-cd Frontend/Disease-Predition
-npm install
-npm run dev      # Vite on :3000, proxies /api → localhost:5000
-```
-
-Open [http://localhost:3000](http://localhost:3000)
-
-> **Note:** PostgreSQL must be running locally. The Backend reads `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME` from the root `.env`.
-
----
-
-## Environment Variables Reference
-
-```bash
-# Root .env (local dev only — never committed)
-ML_SERVICE_URL=http://127.0.0.1:8000
-DB_HOST=localhost
-DB_PORT=5432
 DB_USER=postgres
-DB_PASS=your_password
+DB_PASS=your_db_password
 DB_NAME=Disease-Prediction
-JWT_SECRET=your_secret
-GROQ_API_KEY=gsk_...
-TAVILY_API_KEY=tvly-...
+DB_PORT=5432
+
+JWT_SECRET=your_jwt_secret
+
+GROQ_API_KEY=your_groq_api_key
+TAVILY_API_KEY=your_tavily_api_key
 ```
+> **Security Warning:** Never commit your actual `.env.production` file containing real API keys to version control. They are currently ignored via `.gitignore` to prevent secret leaks.
+
+### Running the Services
+
+To spin up the PostgreSQL database, Node.js Backend, and the FastAPI ML Service:
+
+```bash
+docker-compose up --build -d
+```
+
+- **Backend** will be available at: `http://localhost:5000`
+- **ML Service** runs internally at: `http://dl-service:8000` (accessible to the Backend)
+- **Database** runs internally at port `5432`
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
-```
+```text
 Disease-pred/
-├── Backend/                  # Node.js API + LangGraph agent
-│   ├── src/
-│   │   ├── agent/            # plantAgent.ts + tools.ts (weather, search)
-│   │   ├── routes/           # predict.ts, diagnose.ts, user.ts
-│   │   ├── services/         # ml.service, agent.service, user.service
-│   │   ├── middleware/       # auth.ts (JWT), limiter.ts (rate limit)
-│   │   ├── data/             # diseases.ts (local fallback KB)
-│   │   ├── db.ts             # PostgreSQL pool
-│   │   ├── schema.ts         # Table initialisation
-│   │   └── index.ts          # Express entry point
-│   └── dockerfile
-├── DL-service/               # Python ONNX inference
-│   ├── app/
-│   │   ├── main.py           # FastAPI /predict endpoint
-│   │   ├── model_loader.py   # ONNX session loader
-│   │   └── utils.py          # Image preprocessing
-│   ├── model/                # best_model.onnx + class_names.json
-│   └── dockerfile
-├── Frontend/Disease-Predition/   # React SPA
-│   ├── src/
-│   │   ├── pages/            # Auth, Dashboard, History, Profile
-│   │   ├── components/       # Layout (sidebar + nav)
-│   │   ├── api.ts            # Axios client with JWT interceptors
-│   │   └── App.tsx           # Router + server-side auth guard
-│   ├── nginx.conf            # Production reverse-proxy config
-│   └── dockerfile
-├── docker-compose.yaml       # Production orchestration
-├── .env.production           # Secrets template (fill on EC2)
-└── .env                      # Local dev secrets (gitignored)
+├── Backend/          # Node.js + Express API
+├── DL-service/       # FastAPI + Python ONNX Inference
+├── Frontend/         # React + Vite Application
+├── docker-compose.yaml
+└── README.md
 ```
 
----
+## 🔒 Security & CORS
 
-## API Endpoints
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/health` | ❌ | Health check |
-| `POST` | `/api/register` | ❌ | Create account |
-| `POST` | `/api/login` | ❌ | Login, returns JWT |
-| `GET` | `/api/me` | ✅ JWT | Get current user |
-| `GET` | `/api/history` | ✅ JWT | Prediction history |
-| `POST` | `/api/predict` | ❌ | Image → disease classification only |
-| `POST` | `/api/diagnose` | ✅ JWT | Image + GPS → full AI diagnosis + advisory |
-
----
-
-## Author
-
-Built by **[Sathvik33](https://github.com/Sathvik33)**
+The backend is configured with strict CORS policies, only allowing requests from the production Vercel frontend URL (`https://disease-pred-eight.vercel.app/`) and local development URLs.
