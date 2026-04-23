@@ -1,6 +1,30 @@
-node_modules
-dist
+dist/
+
+node_modules/
+
 .env
-.git
+.env.*
+*.env
+
+# Logs / OS junk
 *.log
+logs/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Version control
+.git/
+.gitignore
+
+# Docs
+*.md
+CHANGELOG*
+LICENSE*
+
+# Misc dev files not needed in any stage
+*.sh
+requirements.txt
 dockerfile
+.dockerignore

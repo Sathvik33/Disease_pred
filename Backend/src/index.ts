@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+import path from "path";
+dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import multer from "multer";
@@ -7,7 +10,21 @@ import userRoute from "./routes/user";
 import initDB from "./schema";
 
 const app = express();
-app.use(cors());
+
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "http://localhost:3000",
+    "http://localhost:5173",
+].filter(Boolean) as string[];
+
+app.use(cors({
+    origin: (origin, cb) => {
+        if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+        cb(new Error(`CORS: origin ${origin} not allowed`));
+    },
+    credentials: true,
+}));
+
 app.use(express.json());
 app.set("trust proxy", 1);
 

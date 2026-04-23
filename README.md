@@ -1,64 +1,284 @@
 <div align="center">
-  <h1>🌱 Disease Prediction Application</h1>
-  <p><strong>A Next-Gen AI-Powered Platform for Plant Disease Identification & Treatment Advice</strong></p>
-  
-  [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](#)
-  [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](#)
-  [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](#)
-  [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](#)
-  
-  <br />
+
+# 🌿 PlantDoc — AI Plant Disease Diagnosis Platform
+
+**Upload a leaf photo. Get an instant diagnosis, weather-aware treatment plan, and actionable farming advice — powered by computer vision and a multi-tool LLM agent.**
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](#)
+[![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](#)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](#)
+[![Python](https://img.shields.io/badge/Python_3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](#)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL_15-316192?style=for-the-badge&logo=postgresql&logoColor=white)](#)
+[![Docker](https://img.shields.io/badge/Docker-0db7ed?style=for-the-badge&logo=docker&logoColor=white)](#)
+
 </div>
 
-## 📖 Overview
+---
 
-The **Disease Prediction Application** is a full-stack, distributed microservices AI system. It enables farmers, gardeners, and agronomists to simply snap a picture of a leaf and receive an instant, accurate disease diagnosis. 
+## What is PlantDoc?
 
-Going beyond mere classification, the system leverages a **ReAct AI Agent** (powered by LangChain & Ollama) hooked up to local treatment data and Open-Meteo weather APIs to provide context-aware, hyper-personalized treatment recommendations.
+PlantDoc is a production-grade, full-stack AI system that lets farmers, agronomists, and gardeners diagnose plant diseases in seconds. It goes far beyond simple image classification:
 
-## 🏗️ Architecture
+1. A **fine-tuned MobileNet model** (exported to ONNX) classifies the leaf image into one of **38 disease categories** with confidence scoring and entropy-based validity checking.
+2. A **LangGraph ReAct agent** (LLaMA 3.3 70B via Groq) then fires three tools in parallel — fetching real-time weather data, live web treatment recommendations, and disease information.
+3. The agent synthesises all of this into a **structured, actionable advisory** tailored to the farmer's exact location and current weather conditions.
 
-The project is structured into three main microservices:
+Everything runs as isolated microservices, fully containerised for one-command deployment on EC2 or any container platfor## System Architecture
 
-1. **[Frontend (Vite + React) ](./Frontend/Disease-Predition)**
-   - The user interface where users upload leaf images and coordinates.
-2. **[Backend (Node.js + Express) ](./Backend)**
-   - The orchestration layer. It handles rate limiting, database persistence, and hosts the LangChain Agent that integrates weather APIs and the Knowledge Base to generate comprehensive advice.
-3. **[DL-Service (FastAPI + PyTorch) ](./DL-service)**
-   - The deep learning microservice. It runs a fine-tuned MobileNetV2 model to classify an image into one of 38 disease categories instantly.
+```
+┌─────────────────────────────────────────┐
+│          User Browser                    │
+└────────────┬────────────────────────────┘
+             │ HTTPS
+┌────────────▼────────────────────────────┐
+│   Vercel — React SPA (Frontend)          │
+│   Static CDN, global edge network        │
+└────────────┬────────────────────────────┘
+             │ HTTPS :5000  (VITE_API_URL)
+             │ Cross-origin — CORS restricted
+┌────────────▼──────────────── EC2 ───────┐
+│   Backend — Express 5 + TypeScript       │
+│   JWT Auth · Rate limiting · Port 5000   │
+│   LangGraph ReAct Agent                  │
+│                                          │
+│  ┌─────────────┐   ┌──────────────────┐ │
+│  │  DL-service  │   │   PostgreSQL 15   │ │
+│  │  FastAPI     │   │   (internal only) │ │
+│  │  ONNX model  │   └──────────────────┘ │
+│  │  (internal)  │                        │
+│  └─────────────┘                         │
+└──────────────────────────────────────────┘
+             │ External API calls
+┌────────────▼────────────────────────────┐
+│  • Groq API  (LLaMA 3.3 70B)            │
+│  • Tavily    (web search)               │
+│  • DuckDuckGo (fallback search)         │
+│  • Open-Meteo (weather data)            │
+└─────────────────────────────────────────┘
+```
 
-## 🚀 Quick Start (Docker)
+### Services
 
-This application is fully Dockerized using highly optimized **Multi-Stage Builds**.
+| Service | Hosting | Tech | Responsibility |
+|---|---|---|---|
+| **Frontend** | Vercel | React 19, Vite, TypeScript | SPA — image upload, camera, GPS, auth, results |
+| **Backend** | EC2, port 5000 | Node.js, Express 5, TypeScript, LangGraph | API gateway, JWT auth, AI agent, DB writes |
+| **DL-service** | EC2 (internal) | Python 3.11, FastAPI, ONNX Runtime | Image inference — returns disease + confidence |
+| **Database** | EC2 (internal) | PostgreSQL 15 | Users, prediction history, advisory logs |
+�─────────────┘    │  • Open-Meteo Weather │
+                                        └──────────────────────┘
+```
 
-Ensure you have [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) installed. (If you don't use Docker Compose, you can build each individually).
+### Services
 
-1. Clone the repository:
+| Service | Tech | Responsibility |
+|---|---|---|
+| **Frontend** | React 19, Vite, TypeScript, Nginx | SPA — image upload, camera capture, GPS, auth, results |
+| **Backend** | Node.js, Express 5, TypeScript, LangGraph | API gateway, JWT auth, AI agent orchestration, DB writes |
+| **DL-service** | Python 3.11, FastAPI, ONNX Runtime | Image inference — runs the ONNX model, returns disease + confidence |
+| **Database** | PostgreSQL 15 | Users, prediction history, advisory logs |
+
+---
+
+## Key Features
+
+- 📸 **Drag-and-drop or live camera** capture for leaf images
+- 📍 **GPS auto-location** with full error handling (permission denied, timeout, unavailable)
+- 🧠 **38-class ONNX plant disease model** — MobileNet fine-tuned on PlantVillage dataset
+- 🔬 **Entropy-based non-plant detection** — rejects non-leaf images before burning LLM tokens
+- 🤖 **LangGraph ReAct agent** with three live tools:
+  - `get_weather` — Open-Meteo current + 7-day history
+  - `search_treatment` — Tavily advanced search with local DB fallback
+  - `search_disease_info` — DuckDuckGo scrape with local DB fallback
+- 💊 **Confidence-aware advice** — direct treatment / suggest confirmation / warn about misclassification
+- 🌦️ **Weather-correlated recommendations** — advice changes based on actual field conditions
+- 🔐 **JWT authentication** — bcrypt hashed passwords, 7-day tokens, server-side validation on every route load
+- 📜 **Prediction history** — all diagnoses logged per user with full advisory text
+- ⚡ **Rate limiting** — 30 req/15 min on predict, 10 req/15 min on diagnose
+- 🐳 **Single-command Docker deployment** — all four services orchestrated by Docker Compose
+
+---
+
+## Production Deployment
+
+### Architecture
+
+| Component | Where | Notes |
+|---|---|---|
+| Frontend | **Vercel** | Auto-deployed from `Frontend/Disease-Predition/` on push |
+| Backend | **EC2** port 5000 | Public — Vercel calls it over HTTPS |
+| DL-service | **EC2** internal | Private — only the backend reaches it |
+| PostgreSQL | **EC2** internal | Private — only the backend reaches it |
+
+### Prerequisites
+
+- EC2 instance (t3.medium or better)
+- Docker Engine 24+ and Docker Compose v2 on EC2
+- Vercel account + project connected to this repo
+- Groq API key — [console.groq.com](https://console.groq.com)
+- Tavily API key — [tavily.com](https://tavily.com)
+
+### Step 1 — Set up Vercel
+
+1. Import `Frontend/Disease-Predition/` as a Vercel project (set **Root Directory** to `Frontend/Disease-Predition`)
+2. Add this **Environment Variable** in Vercel project settings:
+
+   | Variable | Value |
+   |---|---|
+   | `VITE_API_URL` | `http://your-ec2-public-ip:5000` |
+
+3. Deploy — note your Vercel URL (e.g. `https://plantdoc.vercel.app`)
+
+### Step 2 — Deploy backend + DL-service on EC2
+
 ```bash
+# SSH into your EC2 instance
 git clone https://github.com/Sathvik33/Disease-Prediction.git
 cd Disease-Prediction
+
+# Create and fill in secrets
+cp .env.production .env.production.filled
+nano .env.production.filled
 ```
 
-2. Configure your Environment Variables:
-   - Create a `.env` in the root and configure `DB_PASS`, `Fast_api`, `OLLAMA_URL`, etc.
+Fill in all values — especially `FRONTEND_URL` which must exactly match your Vercel URL:
 
-3. Run with Docker Compose (Assuming you map the images via compose):
+```env
+FRONTEND_URL=https://plantdoc.vercel.app    # ← your actual Vercel URL
+DB_PASS=strong_password_here
+JWT_SECRET=48_byte_hex_string
+GROQ_API_KEY=gsk_...
+TAVILY_API_KEY=tvly-...
+```
+
 ```bash
-docker-compose up --build -d
+# Build and start (backend + dl-service + postgres only)
+docker compose --env-file .env.production.filled build --no-cache
+docker compose --env-file .env.production.filled up -d
 ```
-*(Alternatively, navigate to each service directory and spin them up individually via `docker build` and `docker run` commands detailed in their respective local READMEs).*
 
-## 🧠 Model Deployment Notes
+### Step 3 — Open EC2 security group
 
-**"Should I include the model inside the Dockerfile or deploy separately?"**
+In AWS Console → EC2 → Security Groups, add an **inbound rule**:
 
-Because MobileNetV2 is incredibly lightweight (~35MB total for checkpoints and dictionaries), we have explicitly configured the `DL-service` Dockerfile to **include the model directly inside**. 
-This provides maximum flexibility:
-- **Render Deployment**: You can host the `DL-service` purely as an independent microservice API on a platform like Render and fetch its URL in the `.env` (`Fast_api=https://...`).
-- **AWS / Cloud Deployment**: You can deploy all three containers via ECS or EKS without worrying about mounting external s3 volumes for model weights. 
+| Type | Port | Source |
+|---|---|---|
+| Custom TCP | 5000 | 0.0.0.0/0 (or Vercel IP ranges) |
 
-*The custom `dockerfile` in `DL-service` explicitly installs the `CPU` variant of PyTorch, cutting container size drastically and keeping it heavily optimized for cheap cloud compute lines!*
+### Step 4 — Verify
 
-## 🧑‍💻 Author
+```bash
+curl http://your-ec2-ip:5000/health
+# → {"status":"ok"}
 
-Created with ❤️ by **[Sathvik33](https://github.com/Sathvik33)**.
+docker compose ps
+# all services should show "healthy"
+```
+
+Your Vercel frontend is now live and talking to the EC2 backend.
+
+
+---
+
+## Local Development
+
+Start each service individually — no Docker needed.
+
+**Terminal 1 — DL-service:**
+```bash
+cd DL-service
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Terminal 2 — Backend:**
+```bash
+cd Backend
+npm install
+npm run dev      # ts-node-dev, hot reload, reads root .env
+```
+
+**Terminal 3 — Frontend:**
+```bash
+cd Frontend/Disease-Predition
+npm install
+npm run dev      # Vite on :3000, proxies /api → localhost:5000
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+> **Note:** PostgreSQL must be running locally. The Backend reads `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME` from the root `.env`.
+
+---
+
+## Environment Variables Reference
+
+```bash
+# Root .env (local dev only — never committed)
+ML_SERVICE_URL=http://127.0.0.1:8000
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=your_password
+DB_NAME=Disease-Prediction
+JWT_SECRET=your_secret
+GROQ_API_KEY=gsk_...
+TAVILY_API_KEY=tvly-...
+```
+
+---
+
+## Project Structure
+
+```
+Disease-pred/
+├── Backend/                  # Node.js API + LangGraph agent
+│   ├── src/
+│   │   ├── agent/            # plantAgent.ts + tools.ts (weather, search)
+│   │   ├── routes/           # predict.ts, diagnose.ts, user.ts
+│   │   ├── services/         # ml.service, agent.service, user.service
+│   │   ├── middleware/       # auth.ts (JWT), limiter.ts (rate limit)
+│   │   ├── data/             # diseases.ts (local fallback KB)
+│   │   ├── db.ts             # PostgreSQL pool
+│   │   ├── schema.ts         # Table initialisation
+│   │   └── index.ts          # Express entry point
+│   └── dockerfile
+├── DL-service/               # Python ONNX inference
+│   ├── app/
+│   │   ├── main.py           # FastAPI /predict endpoint
+│   │   ├── model_loader.py   # ONNX session loader
+│   │   └── utils.py          # Image preprocessing
+│   ├── model/                # best_model.onnx + class_names.json
+│   └── dockerfile
+├── Frontend/Disease-Predition/   # React SPA
+│   ├── src/
+│   │   ├── pages/            # Auth, Dashboard, History, Profile
+│   │   ├── components/       # Layout (sidebar + nav)
+│   │   ├── api.ts            # Axios client with JWT interceptors
+│   │   └── App.tsx           # Router + server-side auth guard
+│   ├── nginx.conf            # Production reverse-proxy config
+│   └── dockerfile
+├── docker-compose.yaml       # Production orchestration
+├── .env.production           # Secrets template (fill on EC2)
+└── .env                      # Local dev secrets (gitignored)
+```
+
+---
+
+## API Endpoints
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/health` | ❌ | Health check |
+| `POST` | `/api/register` | ❌ | Create account |
+| `POST` | `/api/login` | ❌ | Login, returns JWT |
+| `GET` | `/api/me` | ✅ JWT | Get current user |
+| `GET` | `/api/history` | ✅ JWT | Prediction history |
+| `POST` | `/api/predict` | ❌ | Image → disease classification only |
+| `POST` | `/api/diagnose` | ✅ JWT | Image + GPS → full AI diagnosis + advisory |
+
+---
+
+## Author
+
+Built by **[Sathvik33](https://github.com/Sathvik33)**

@@ -1,8 +1,7 @@
 import { ChatGroq } from "@langchain/groq";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { weatherTool, treatmentSearch, diseaseSearch } from "./tools";
-import dotenv from "dotenv";
-dotenv.config({ path: "../.env" });
+
 
 const llm = new ChatGroq({
   apiKey: process.env.GROQ_API_KEY!,

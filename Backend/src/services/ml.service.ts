@@ -1,18 +1,17 @@
 import axios from "axios";
 import FormData from "form-data";
-import dotenv from "dotenv";
-dotenv.config({ path: "../.env" });
 import { AxiosError } from "axios";
 
-const FASTAPI_URL = process.env.Fast_api ?? "http://localhost:8000";
+const FASTAPI_URL = process.env.ML_SERVICE_URL ?? "http://localhost:8000";
+
 
 export interface PredictResult {
     disease: string;
     confidence: number;
     is_plant: boolean;
     entropy: number;
-    top3: { disease: string; confidence: number }[];
 }
+
 
 export const predictDisease = async (file: Express.Multer.File): Promise<PredictResult> => {
     const form = new FormData();

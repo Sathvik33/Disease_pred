@@ -1,17 +1,85 @@
-*.env
-*.pyc
-*.pth
-*.pt
-DL/Data/
-DL/Models/
-*.csv
-*.jpg
-*.png
-JPG
-wandb/
-*.log
-*.wandb
-node_modules/
-postman/
-.postman
+# ════════════════════════════════════════════════════════
+#  .gitignore — Disease-pred
+#  Rule: if in doubt, exclude it.
+# ════════════════════════════════════════════════════════
 
+# ── Secrets & environment files ──────────────────────────
+.env
+.env.*
+!.env.production        # template only — real values filled on server, not committed
+*.env
+
+# ── Python ───────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pth
+*.egg-info/
+.venv/
+venv/
+
+# ── Model weights (large binary files) ───────────────────
+# The ONNX model is committed because it ships inside the container.
+# PyTorch checkpoints are dev-only artefacts and must NOT be committed.
+*.pt
+*.pth
+*.ckpt
+*.pkl
+
+# ── Training / experiment data ────────────────────────────
+DL-service/Data/
+Data/
+*.csv
+wandb/
+*.wandb
+*.ipynb
+*.ipynb_checkpoints/
+
+# ── Node.js ───────────────────────────────────────────────
+node_modules/
+dist/
+.cache/
+.npm/
+
+# ── Build / compiled output ───────────────────────────────
+*.js.map
+*.tsbuildinfo
+
+# ── Logs ──────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── OS / Editor artefacts ─────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ── Docker ────────────────────────────────────────────────
+# docker-compose is committed (no secrets inside it).
+# .env.production is excluded above — it is filled on the server.
+
+# ── Images / media (training data, not app assets) ────────
+# Uncomment if you have leaf images checked in by accident:
+# *.jpg
+# *.jpeg
+# *.png
+# *.webp
+# JPG/
+
+# ── Postman ───────────────────────────────────────────────
+postman/
+.postman/
+
+# ── Package manager lock files ─────────────────────────────
+# package-lock.json and requirements.txt ARE committed (reproducible builds).
+# Only exclude npm debug files.
+package-lock.json.bak
+pip-selfcheck.json

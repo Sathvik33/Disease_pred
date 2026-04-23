@@ -1,8 +1,48 @@
-node_modules
-dist
-.git
+
+.git/
+.gitignore
+
 .env
-wandb
-__pycache__
-*.log
+.env.*
+*.env
+
+# Python artefacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+
+# Node artefacts
+node_modules/
+dist/
+*.tsbuildinfo
+
+wandb/
+*.wandb
 Data/
+DL-service/Data/
+*.ipynb
+
+# Logs
+*.log
+logs/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Postman / dev tools
+postman/
+.postman/
+
+# Docs — not needed in any image
+*.md
+
+# Root-level package files (not needed — each service has its own)
+package.json
+package-lock.json

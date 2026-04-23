@@ -4,10 +4,13 @@ import axios from "axios";
 import { tavily } from "@tavily/core";
 import { search as ddgSearch } from "duck-duck-scrape";
 import { lookupTreatment, lookupDisease } from "../services/treatment.service";
-import dotenv from "dotenv";
-dotenv.config({ path: "../.env" });
 
-const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY || "" });
+
+let _tvly: ReturnType<typeof tavily> | null = null;
+const getTvly = () => {
+    if (!_tvly) _tvly = tavily({ apiKey: process.env.TAVILY_API_KEY! });
+    return _tvly;
+};
 
 const weatherTool = tool(
     async ({ latitude, longitude }) => {
@@ -40,9 +43,6 @@ const weatherTool = tool(
         const cur = forecast.data.current;
         const hist = history.data.daily;
 
-        const days = hist.time.map((t: string, i: number) => (
-            `${t}: high ${hist.temperature_2m_max[i]}°C, low ${hist.temperature_2m_min[i]}°C, rain ${hist.precipitation_sum[i]}mm`
-        ));
 
         return {
             current: {
@@ -72,7 +72,7 @@ const weatherTool = tool(
 const treatmentSearch = tool(
     async ({ query, disease }) => {
         try {
-            const res = await tvly.search(query, {
+            const res = await getTvly().search(query, {
                 searchDepth: "advanced",
                 maxResults: 5,
                 includeAnswer: true,

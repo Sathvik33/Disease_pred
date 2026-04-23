@@ -1,0 +1,79 @@
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB:       ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - internal
+
+  # ── DL / ONNX inference service ─────────────────────────────────────────────
+  # Stays internal — only the backend calls it, never the public internet.
+  dl-service:
+    build:
+      context: ./DL-service
+      dockerfile: dockerfile
+    container_name: dl-service
+    restart: unless-stopped
+    environment:
+      PYTHONUNBUFFERED: "1"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - internal
+
+  # ── Node.js API + LLM Agent ─────────────────────────────────────────────────
+  # Port 5000 is exposed publicly so Vercel (frontend) can reach the API.
+  # FRONTEND_URL must match your Vercel deployment URL for CORS to pass.
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: dockerfile
+    container_name: backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      dl-service:
+        condition: service_healthy
+    env_file: .env.production
+    environment:
+      NODE_ENV:        production
+      DB_HOST:         postgres          # service-name, not localhost
+      ML_SERVICE_URL:  http://dl-service:8000
+    ports:
+      - "5000:5000"                      # public — called by Vercel frontend
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - internal
+
+# ── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  internal:
+    driver: bridge
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
+volumes:
+  pgdata:

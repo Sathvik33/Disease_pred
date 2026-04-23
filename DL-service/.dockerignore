@@ -1,8 +1,48 @@
-__pycache__
+__pycache__/
 *.pyc
+*.pyo
+*.pyd
+.mypy_cache/
+.pytest_cache/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+
+# Secrets
 .env
-.git
-wandb
-*.log
-dockerfile
+.env.*
+*.env
+
+# Training / experiment data — large, irrelevant at inference time
+Data/
+wandb/
+*.wandb
 *.ipynb
+*.ipynb_checkpoints/
+
+# PyTorch checkpoints — only ONNX model ships in the image
+*.pt
+*.pth
+*.ckpt
+*.pkl
+
+# Logs / OS junk
+*.log
+logs/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Version control
+.git/
+.gitignore
+
+# Docs / dev files
+*.md
+CHANGELOG*
+LICENSE*
+dockerfile
+.dockerignore

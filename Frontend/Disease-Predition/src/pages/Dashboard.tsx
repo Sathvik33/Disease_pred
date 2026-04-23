@@ -2,9 +2,10 @@ import { useState, useRef, useCallback } from 'react';
 import { diagnose } from '../api';
 
 interface DiagResult {
-    prediction: { disease: string; confidence: number };
+    prediction: { disease: string; confidence: number; is_plant: boolean };
     advisory: string;
 }
+
 
 export default function Dashboard() {
     const [file, setFile] = useState<File | null>(null);
@@ -12,6 +13,7 @@ export default function Dashboard() {
     const [lat, setLat] = useState('');
     const [lon, setLon] = useState('');
     const [loading, setLoading] = useState(false);
+    const [locating, setLocating] = useState(false);
     const [result, setResult] = useState<DiagResult | null>(null);
     const [error, setError] = useState('');
     const [tab, setTab] = useState<'upload' | 'camera'>('upload');
@@ -19,6 +21,7 @@ export default function Dashboard() {
     const fileRef = useRef<HTMLInputElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
+
 
     const pickFile = (f: File) => {
         setFile(f);
@@ -34,12 +37,38 @@ export default function Dashboard() {
     };
 
     const getLocation = () => {
-        if (!navigator.geolocation) return;
-        navigator.geolocation.getCurrentPosition((pos) => {
-            setLat(pos.coords.latitude.toFixed(4));
-            setLon(pos.coords.longitude.toFixed(4));
-        });
+        if (!navigator.geolocation) {
+            setError('Geolocation is not supported by your browser.');
+            return;
+        }
+        setLocating(true);
+        setError('');
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                setLat(pos.coords.latitude.toFixed(4));
+                setLon(pos.coords.longitude.toFixed(4));
+                setLocating(false);
+            },
+            (err) => {
+                setLocating(false);
+                switch (err.code) {
+                    case err.PERMISSION_DENIED:
+                        setError('Location access denied. Please allow location in your browser settings and try again.');
+                        break;
+                    case err.POSITION_UNAVAILABLE:
+                        setError('Location unavailable. Check your device\'s location settings.');
+                        break;
+                    case err.TIMEOUT:
+                        setError('Location request timed out. Please try again.');
+                        break;
+                    default:
+                        setError('Could not get location. Please enter coordinates manually.');
+                }
+            },
+            { timeout: 10000, maximumAge: 60000 }
+        );
     };
+
 
     const startCamera = useCallback(async () => {
         try {
@@ -186,9 +215,16 @@ export default function Dashboard() {
                     </div>
 
                     <div className="btn-row">
-                        <button className="btn btn-secondary" onClick={getLocation}>
-                            📍 Use My Location
+                        <button
+                            className="btn btn-secondary"
+                            onClick={getLocation}
+                            disabled={locating}
+                        >
+                            {locating ? (
+                                <><div className="spinner" /> Locating...</>
+                            ) : '📍 Use My Location'}
                         </button>
+
                         <button className="btn btn-primary" onClick={submit} disabled={!file || loading}>
                             {loading ? (
                                 <><div className="spinner" /> Analyzing...</>
