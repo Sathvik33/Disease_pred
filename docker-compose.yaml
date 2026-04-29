@@ -1,6 +1,5 @@
 services:
 
-  # ── PostgreSQL ──────────────────────────────────────────────────────────────
   postgres:
     image: postgres:15-alpine
     container_name: postgres
@@ -12,7 +11,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -50,9 +49,8 @@ services:
         condition: service_healthy
     env_file: .env.production
     environment:
-      NODE_ENV:        production
-      DB_HOST:         postgres
-      ML_SERVICE_URL:  http://dl-service:8000
+      NODE_ENV: production
+      ML_SERVICE_URL: http://dl-service:8000
     ports:
       - "5000:5000"
     healthcheck:

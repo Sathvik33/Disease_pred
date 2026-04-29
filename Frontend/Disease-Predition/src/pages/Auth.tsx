@@ -17,15 +17,34 @@ export default function Auth() {
         setLoading(true);
 
         try {
-            const res = mode === 'login'
-                ? await login(email, password)
-                : await register(name, email, password);
+            console.log("Submitting auth:", mode, email);
+
+            const res =
+                mode === 'login'
+                    ? await login(email, password)
+                    : await register(name, email, password);
+
+            console.log("AUTH SUCCESS:", res.data);
+
+            if (!res.data?.token || !res.data?.user) {
+                throw new Error("Missing token or user in response");
+            }
 
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
+
+            console.log("Saved token:", localStorage.getItem("token"));
+
             nav('/');
         } catch (err: any) {
-            setError(err.response?.data?.error || 'something went wrong');
+            console.error("AUTH ERROR:", err);
+            console.error("AUTH RESPONSE:", err?.response?.data);
+
+            setError(
+                err?.response?.data?.error ||
+                err?.message ||
+                'something went wrong'
+            );
         } finally {
             setLoading(false);
         }
@@ -49,6 +68,7 @@ export default function Auth() {
                             className="input-field"
                             placeholder="Your name"
                             value={name}
+                            required
                             onChange={(e) => setName(e.target.value)}
                         />
                     )}
@@ -57,6 +77,7 @@ export default function Auth() {
                         type="email"
                         placeholder="Email address"
                         value={email}
+                        required
                         onChange={(e) => setEmail(e.target.value)}
                     />
                     <input
@@ -64,6 +85,7 @@ export default function Auth() {
                         type="password"
                         placeholder="Password"
                         value={password}
+                        required
                         onChange={(e) => setPassword(e.target.value)}
                     />
                     <button className="btn btn-primary" type="submit" disabled={loading}>
