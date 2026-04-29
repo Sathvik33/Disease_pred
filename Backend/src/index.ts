@@ -14,15 +14,23 @@ const app = express();
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   "http://localhost:3000",
-  "http://localhost:5173",
-].filter(Boolean) as string[];
+  "http://localhost:5173"
+].filter(Boolean);
 
 app.use(cors({
-    origin: (origin, cb) => {
-        if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-        cb(new Error(`CORS: origin ${origin} not allowed`));
-    },
-    credentials: true,
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith(".vercel.app")
+    ) {
+      return cb(null, true);
+    }
+
+    cb(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  credentials: true
 }));
 
 app.use(express.json());
