@@ -9,6 +9,16 @@ from app.utils import preprocess_image
 
 app = FastAPI()
 
+
+def _green_dominance(image: Image.Image) -> float:
+
+    img = image.resize((64, 64))
+    arr = np.array(img, dtype=np.float32)
+    r, g, b = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2]
+    green_dominant = (g > r) & (g > b)
+    return float(np.mean(green_dominant))
+
+
 @app.get("/")
 def root():
     return {"message": "Welcome"}
@@ -36,7 +46,13 @@ async def predict(file: UploadFile = File(...)):
         max_entropy = math.log(len(class_names))
         norm_entropy = entropy / max_entropy
 
-        is_plant = confidence > 0.40 and norm_entropy < 0.65
+        green_ratio = _green_dominance(image)
+
+        is_plant = (
+            confidence > 0.55
+            and norm_entropy < 0.50
+            and green_ratio > 0.12
+        )
 
         return {
             "disease": class_names[predicted_idx],
@@ -47,4 +63,4 @@ async def predict(file: UploadFile = File(...)):
 
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))

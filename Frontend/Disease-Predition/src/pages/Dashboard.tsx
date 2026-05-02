@@ -115,10 +115,15 @@ export default function Dashboard() {
 
         try {
             const res = await diagnose(file, parseFloat(lat), parseFloat(lon));
-            if (res.data.error && res.data.prediction && res.data.prediction.is_plant === false) {
-                setError(res.data.error);
+            const data = res.data;
+
+            if (data.prediction?.is_plant === false || data.error) {
+                setError(
+                    data.error ||
+                    'This image does not appear to be a plant leaf. Please upload a clear photo of a crop or plant leaf for diagnosis.'
+                );
             } else {
-                setResult(res.data);
+                setResult(data);
             }
         } catch (err: any) {
             setError(err.response?.data?.error || 'diagnosis failed');
