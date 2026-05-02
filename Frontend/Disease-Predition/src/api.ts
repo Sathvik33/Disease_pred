@@ -8,15 +8,14 @@ const api = axios.create({
 api.interceptors.request.use((cfg) => {
     const token = localStorage.getItem('token');
     if (token) cfg.headers.Authorization = `Bearer ${token}`;
+    cfg.headers['ngrok-skip-browser-warning'] = 'true';
+
     return cfg;
 });
 
 api.interceptors.response.use(
     (res) => res,
     (err) => {
-        // Only clear credentials on genuine 401 responses from the server,
-        // NOT on network errors (which have no err.response at all).
-        // Also skip auth endpoints — login/register 401s are handled in Auth.tsx.
         const url = err.config?.url || '';
         const isAuthEndpoint = url.includes('/login') || url.includes('/register');
 
