@@ -14,7 +14,13 @@ api.interceptors.request.use((cfg) => {
 api.interceptors.response.use(
     (res) => res,
     (err) => {
-        if (err.response?.status === 401) {
+        // Only clear credentials on genuine 401 responses from the server,
+        // NOT on network errors (which have no err.response at all).
+        // Also skip auth endpoints — login/register 401s are handled in Auth.tsx.
+        const url = err.config?.url || '';
+        const isAuthEndpoint = url.includes('/login') || url.includes('/register');
+
+        if (err.response?.status === 401 && !isAuthEndpoint) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/login';
@@ -39,7 +45,7 @@ export const predict = (file: File) => {
     return api.post('/predict', form);
 };
 
-export const diagnose = (file: File, lat: number, lon: number) => {
+export const diagnose = (file: File, lat: number, lon: number) =>  {
     const form = new FormData();
     form.append('image', file);
     form.append('latitude', lat.toString());
@@ -48,3 +54,4 @@ export const diagnose = (file: File, lat: number, lon: number) => {
 };
 
 export default api;
+

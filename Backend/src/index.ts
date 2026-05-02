@@ -23,7 +23,9 @@ app.use(cors({
 
     if (
       allowedOrigins.includes(origin) ||
-      origin.endsWith(".vercel.app")
+      origin.endsWith(".vercel.app") ||
+      origin.endsWith(".ngrok-free.app") ||
+      origin.endsWith(".ngrok.io")
     ) {
       return cb(null, true);
     }
