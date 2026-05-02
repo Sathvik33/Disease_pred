@@ -25,6 +25,7 @@ app.use(cors({
       allowedOrigins.includes(origin) ||
       origin.endsWith(".vercel.app") ||
       origin.endsWith(".ngrok-free.app") ||
+      origin.endsWith(".ngrok-free.dev") ||
       origin.endsWith(".ngrok.io")
     ) {
       return cb(null, true);
@@ -32,7 +33,8 @@ app.use(cors({
 
     cb(new Error(`CORS: origin ${origin} not allowed`));
   },
-  credentials: true
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"]
 }));
 
 app.use(express.json());
