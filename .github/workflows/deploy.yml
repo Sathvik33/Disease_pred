@@ -25,7 +25,7 @@ jobs:
           aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 551656631805.dkr.ecr.ap-south-1.amazonaws.com
 
       - name: Build Backend
-        run: docker build -t plant-backend ./backend
+        run: docker build -t plant-backend ./Backend
 
       - name: Tag Backend
         run: docker tag plant-backend:latest 551656631805.dkr.ecr.ap-south-1.amazonaws.com/plant-backend:latest
