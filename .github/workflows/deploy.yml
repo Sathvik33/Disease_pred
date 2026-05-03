@@ -49,6 +49,9 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
+            aws ecr get-login-password --region ap-south-1 \
+            | docker login --username AWS --password-stdin 551656631805.dkr.ecr.ap-south-1.amazonaws.com
+
             docker pull 551656631805.dkr.ecr.ap-south-1.amazonaws.com/plant-backend:latest
             docker rm -f backend || true
             docker run -d \
@@ -64,5 +67,3 @@ jobs:
               --name dl-service \
               --network plant-net \
               551656631805.dkr.ecr.ap-south-1.amazonaws.com/plant-dl-service:latest
-
-              
