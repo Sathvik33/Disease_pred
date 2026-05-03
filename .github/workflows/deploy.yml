@@ -64,3 +64,5 @@ jobs:
               --name dl-service \
               --network plant-net \
               551656631805.dkr.ecr.ap-south-1.amazonaws.com/plant-dl-service:latest
+
+              
