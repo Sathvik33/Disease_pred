@@ -1,0 +1,43 @@
+name: Deploy Backend + DL Service
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 551656631805.dkr.ecr.ap-south-1.amazonaws.com
+
+      - name: Build Backend
+        run: docker build -t plant-backend ./backend
+
+      - name: Tag Backend
+        run: docker tag plant-backend:latest 551656631805.dkr.ecr.ap-south-1.amazonaws.com/plant-backend:latest
+
+      - name: Push Backend
+        run: docker push 551656631805.dkr.ecr.ap-south-1.amazonaws.com/plant-backend:latest
+
+      - name: Build DL Service
+        run: docker build -t plant-dl-service ./DL-service
+
+      - name: Tag DL Service
+        run: docker tag plant-dl-service:latest 551656631805.dkr.ecr.ap-south-1.amazonaws.com/plant-dl-service:latest
+
+      - name: Push DL Service
+        run: docker push 551656631805.dkr.ecr.ap-south-1.amazonaws.com/plant-dl-service:latest
